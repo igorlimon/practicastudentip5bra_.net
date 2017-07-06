@@ -1,28 +1,27 @@
 using EventApp.Data;
+using EventApp.Infrastructure;
 using EventApp.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace EventApp.Controllers
 {
     public class EventsController : Controller
     {
-        private readonly EventAppDbContext _context;
+        private EventManager eventManager;
 
         public EventsController(EventAppDbContext context)
         {
-            _context = context;    
+            eventManager = new EventManager(context);
         }
 
-        // GET: Events
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult > Index()
         {
-            return View(await _context.Events.ToListAsync());
+            var a = await eventManager.GetAllEventsAsync();
+            return View(a);
         }
 
-        // GET: Events/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -30,8 +29,7 @@ namespace EventApp.Controllers
                 return NotFound();
             }
 
-            var @event = await _context.Events
-                .SingleOrDefaultAsync(m => m.Id == id);
+            var @event = await eventManager.GetAsync(id.Value);
             if (@event == null)
             {
                 return NotFound();
@@ -40,7 +38,6 @@ namespace EventApp.Controllers
             return View(@event);
         }
 
-        // GET: Events/Create
         public IActionResult Create()
         {
             return View();
@@ -55,10 +52,11 @@ namespace EventApp.Controllers
         {
             if (ModelState.IsValid)
             {
-                _context.Add(@event);
-                await _context.SaveChangesAsync();
+                await eventManager.SaveAsync(@event);
+               
                 return RedirectToAction("Index");
             }
+
             return View(@event);
         }
 
@@ -70,11 +68,13 @@ namespace EventApp.Controllers
                 return NotFound();
             }
 
-            var @event = await _context.Events.SingleOrDefaultAsync(m => m.Id == id);
+            var @event = await eventManager.GetAsync(id.Value);                 
+
             if (@event == null)
             {
                 return NotFound();
             }
+
             return View(@event);
         }
 
@@ -94,8 +94,7 @@ namespace EventApp.Controllers
             {
                 try
                 {
-                    _context.Update(@event);
-                    await _context.SaveChangesAsync();
+                    await eventManager.EditAsync(@event);                   
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -108,6 +107,7 @@ namespace EventApp.Controllers
                         throw;
                     }
                 }
+
                 return RedirectToAction("Index");
             }
             return View(@event);
@@ -121,8 +121,7 @@ namespace EventApp.Controllers
                 return NotFound();
             }
 
-            var @event = await _context.Events
-                .SingleOrDefaultAsync(m => m.Id == id);
+            var @event = await eventManager.GetAsync(id.Value);
             if (@event == null)
             {
                 return NotFound();
@@ -136,15 +135,13 @@ namespace EventApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var @event = await _context.Events.SingleOrDefaultAsync(m => m.Id == id);
-            _context.Events.Remove(@event);
-            await _context.SaveChangesAsync();
+            await eventManager.DeleteAsync(id);
             return RedirectToAction("Index");
         }
 
         private bool EventExists(int id)
         {
-            return _context.Events.Any(e => e.Id == id);
+            return eventManager.ExistAsync(id);
         }
     }
 }
