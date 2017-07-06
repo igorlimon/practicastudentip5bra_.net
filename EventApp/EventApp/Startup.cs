@@ -9,6 +9,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using React.AspNet;
 
 namespace EventApp
@@ -82,15 +84,20 @@ namespace EventApp
             // Add external authentication middleware below. To configure them please see https://go.microsoft.com/fwlink/?LinkID=532715
 
             // Initialise ReactJS.NET. Must be before static files.
+            // Initialise ReactJS.NET. Must be before static files.
             app.UseReact(config =>
             {
                 // If you want to use server-side rendering of React components,
                 // add all the necessary JavaScript files here. This includes
                 // your components as well as all of their dependencies.
                 // See http://reactjs.net/ for more information. Example:
-                //config
-                //  .AddScript("~/Scripts/First.jsx")
-                //  .AddScript("~/Scripts/Second.jsx");
+                config
+                  .AddScript("~/js/EventApp.jsx")
+                  .SetJsonSerializerSettings(new JsonSerializerSettings
+                  {
+                      StringEscapeHandling = StringEscapeHandling.EscapeHtml,
+                      ContractResolver = new CamelCasePropertyNamesContractResolver()
+                  });
 
                 // If you use an external build too (for example, Babel, Webpack,
                 // Browserify or Gulp), you can improve performance by disabling
